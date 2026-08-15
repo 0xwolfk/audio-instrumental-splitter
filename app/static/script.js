@@ -91,6 +91,7 @@ splitButton.addEventListener("click", async () => {
   const formData = new FormData();
   formData.append("file", selectedFile);
   formData.append("bitrate", getSelectedBitrate());
+  formData.append("high_quality", document.getElementById("highQuality").checked);
 
   try {
     const response = await fetch("/api/separate", { method: "POST", body: formData });

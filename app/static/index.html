@@ -52,6 +52,11 @@
         </label>
       </fieldset>
 
+      <label class="checkbox-row">
+        <input type="checkbox" id="highQuality" />
+        <span>Higher-quality separation (slower, ~3x processing time)</span>
+      </label>
+
       <button id="splitButton" class="button button--primary" disabled>
         <i data-lucide="wand-2" class="icon icon--sm"></i>
         Split track
@@ -101,6 +106,13 @@
         <span id="errorText"></span>
       </div>
     </section>
+
+    <footer class="page-footer">
+      <a href="https://github.com/facebookresearch/demucs" target="_blank" rel="noopener noreferrer">
+        <i data-lucide="infinity" class="icon icon--sm icon--muted"></i>
+        <span>Powered by Meta AI Research · Demucs</span>
+      </a>
+    </footer>
   </main>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>

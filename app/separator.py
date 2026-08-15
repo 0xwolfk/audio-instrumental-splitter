@@ -7,6 +7,7 @@ from typing import Callable, Optional
 MODEL = "htdemucs"
 VALID_BITRATES = (128, 320)
 JOBS = 4  # parallel chunk workers; same model/quality, just split across more CPU workers
+HIGH_QUALITY_SHIFTS = 2  # test-time shift averaging; better separation, ~3x slower
 PROGRESS_RE = re.compile(r"(\d{1,3})%\|")
 
 
@@ -14,6 +15,7 @@ def separate(
     input_path: Path,
     output_dir: Path,
     bitrate: int = 320,
+    high_quality: bool = False,
     progress_callback: Optional[Callable[[int], None]] = None,
 ) -> dict[str, Path]:
     """Run Demucs two-stems separation and return paths to the resulting MP3 stems."""
@@ -39,6 +41,8 @@ def separate(
         str(output_dir),
         str(input_path),
     ]
+    if high_quality:
+        cmd += ["--shifts", str(HIGH_QUALITY_SHIFTS)]
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,

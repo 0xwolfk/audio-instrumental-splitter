@@ -1,8 +1,10 @@
 import io
 import shutil
 import threading
+import time
 import uuid
 import zipfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -15,14 +17,37 @@ BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 OUTPUT_DIR = BASE_DIR / "outputs"
 
-app = FastAPI(title="Audio Instrumental Splitter")
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+MAX_JOB_AGE_SECONDS = 24 * 60 * 60  # purge job files older than this
 
 # In-memory job tracker. Fine for a single-user local app.
 jobs: dict[str, dict] = {}
 
 
-def run_job(job_id: str, input_path: Path, bitrate: int):
+def cleanup_old_jobs():
+    now = time.time()
+    active_ids = {
+        job_id for job_id, job in jobs.items() if job["status"] in ("queued", "processing")
+    }
+    for parent in (UPLOAD_DIR, OUTPUT_DIR):
+        for job_dir in parent.iterdir():
+            if not job_dir.is_dir() or job_dir.name in active_ids:
+                continue
+            if now - job_dir.stat().st_mtime > MAX_JOB_AGE_SECONDS:
+                shutil.rmtree(job_dir, ignore_errors=True)
+                jobs.pop(job_dir.name, None)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    cleanup_old_jobs()
+    yield
+
+
+app = FastAPI(title="Audio Instrumental Splitter", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+
+def run_job(job_id: str, input_path: Path, bitrate: int, high_quality: bool):
     job = jobs[job_id]
     try:
         job["status"] = "processing"
@@ -31,7 +56,13 @@ def run_job(job_id: str, input_path: Path, bitrate: int):
         def on_progress(pct: int):
             job["progress"] = pct
 
-        stems = separate(input_path, OUTPUT_DIR / job_id, bitrate=bitrate, progress_callback=on_progress)
+        stems = separate(
+            input_path,
+            OUTPUT_DIR / job_id,
+            bitrate=bitrate,
+            high_quality=high_quality,
+            progress_callback=on_progress,
+        )
         job["status"] = "done"
         job["progress"] = 100
         job["stems"] = {name: str(path) for name, path in stems.items()}
@@ -46,11 +77,17 @@ def index():
 
 
 @app.post("/api/separate")
-async def create_job(file: UploadFile = File(...), bitrate: int = Form(320)):
+async def create_job(
+    file: UploadFile = File(...),
+    bitrate: int = Form(320),
+    high_quality: bool = Form(False),
+):
     if Path(file.filename).suffix.lower() != ".mp3":
         raise HTTPException(status_code=400, detail="Only MP3 files are accepted")
     if bitrate not in VALID_BITRATES:
         raise HTTPException(status_code=400, detail="Bitrate must be 128 or 320")
+
+    cleanup_old_jobs()
 
     job_id = uuid.uuid4().hex
     job_dir = UPLOAD_DIR / job_id
@@ -61,7 +98,9 @@ async def create_job(file: UploadFile = File(...), bitrate: int = Form(320)):
         shutil.copyfileobj(file.file, f)
 
     jobs[job_id] = {"status": "queued", "filename": file.filename, "progress": 0}
-    thread = threading.Thread(target=run_job, args=(job_id, input_path, bitrate), daemon=True)
+    thread = threading.Thread(
+        target=run_job, args=(job_id, input_path, bitrate, high_quality), daemon=True
+    )
     thread.start()
 
     return {"job_id": job_id}
