@@ -1,0 +1,36 @@
+# Install with:
+#   pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r requirements.txt
+#   pip install demucs==4.0.1 --no-deps
+#
+# demucs is installed separately with --no-deps because its normal dependency
+# resolution pulls in `diffq` (needed only for quantized models, not htdemucs),
+# which requires a C++ compiler to build and isn't needed here. Everything
+# below is demucs's actual dependency set minus diffq.
+
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+python-multipart==0.0.32
+
+numpy==2.5.2
+einops==0.8.2
+julius==0.2.8
+lameenc==1.8.4
+openunmix==1.3.0
+PyYAML==6.0.3
+tqdm==4.70.0
+dora_search==0.1.12
+retrying==1.4.2
+flashy==0.0.2
+hydra-core==1.3.5
+hydra-colorlog==1.2.0
+omegaconf==2.3.1
+submitit==1.5.4
+cloudpickle==3.1.2
+treetable==0.2.6
+
+# torchaudio/torchcodec are only imported as an unused fallback path in
+# demucs (actual audio I/O goes through ffmpeg via subprocess) — versions
+# don't need to match torch exactly.
+torchaudio==2.11.0
+torchcodec==0.16.0

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Audio Instrumental Splitter</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <div class="topbar__brand">
+      <i data-lucide="audio-lines" class="icon icon--brand"></i>
+      <span>Instrumental Splitter</span>
+    </div>
+    <span class="badge">Demucs · htdemucs</span>
+  </header>
+
+  <main class="page">
+    <section class="card">
+      <h1 class="card__title">Split a track into vocals &amp; instrumental</h1>
+      <p class="card__subtitle">
+        Drop an audio file below. Separation runs locally with Demucs — nothing
+        leaves your machine.
+      </p>
+
+      <div id="dropzone" class="dropzone">
+        <i data-lucide="upload-cloud" class="icon icon--muted"></i>
+        <p class="dropzone__title">Drag &amp; drop an MP3 file here</p>
+        <p class="dropzone__subtitle">or click to browse · MP3 only</p>
+        <input id="fileInput" type="file" accept="audio/mpeg,.mp3" hidden />
+      </div>
+
+      <div id="fileRow" class="file-row hidden">
+        <i data-lucide="file-audio" class="icon icon--muted"></i>
+        <span id="fileName" class="file-row__name"></span>
+        <button id="clearFile" class="icon-button" title="Remove file">
+          <i data-lucide="x" class="icon icon--sm"></i>
+        </button>
+      </div>
+
+      <fieldset class="bitrate">
+        <legend class="bitrate__legend">Output quality</legend>
+        <label class="bitrate__option">
+          <input type="radio" name="bitrate" value="128" />
+          <span>128 kbps</span>
+        </label>
+        <label class="bitrate__option">
+          <input type="radio" name="bitrate" value="320" checked />
+          <span>320 kbps</span>
+        </label>
+      </fieldset>
+
+      <button id="splitButton" class="button button--primary" disabled>
+        <i data-lucide="wand-2" class="icon icon--sm"></i>
+        Split track
+      </button>
+
+      <div id="statusPanel" class="status-panel hidden">
+        <div id="statusRow" class="status-row">
+          <i data-lucide="loader-circle" class="icon icon--sm icon--spin"></i>
+          <span id="statusText">Queued…</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="resultsPanel" class="results hidden">
+        <div class="result-card">
+          <i data-lucide="mic-2" class="icon icon--accent"></i>
+          <div class="result-card__body">
+            <p class="result-card__title">Vocals</p>
+            <p class="result-card__subtitle">Isolated vocal track · MP3</p>
+          </div>
+          <a id="downloadVocals" class="button button--secondary" href="#" download>
+            <i data-lucide="download" class="icon icon--sm"></i>
+            Download
+          </a>
+        </div>
+        <div class="result-card">
+          <i data-lucide="disc-3" class="icon icon--accent"></i>
+          <div class="result-card__body">
+            <p class="result-card__title">Instrumental</p>
+            <p class="result-card__subtitle">Music without vocals · MP3</p>
+          </div>
+          <a id="downloadInstrumental" class="button button--secondary" href="#" download>
+            <i data-lucide="download" class="icon icon--sm"></i>
+            Download
+          </a>
+        </div>
+        <button id="downloadBoth" class="button button--primary">
+          <i data-lucide="folder-archive" class="icon icon--sm"></i>
+          Download both (.zip)
+        </button>
+      </div>
+
+      <div id="errorPanel" class="error-panel hidden">
+        <i data-lucide="circle-alert" class="icon icon--sm icon--danger"></i>
+        <span id="errorText"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="/static/bg-animation.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
