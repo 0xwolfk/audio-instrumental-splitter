@@ -6,6 +6,7 @@ from typing import Callable, Optional
 
 MODEL = "htdemucs"
 VALID_BITRATES = (128, 320)
+JOBS = 4  # parallel chunk workers; same model/quality, just split across more CPU workers
 PROGRESS_RE = re.compile(r"(\d{1,3})%\|")
 
 
@@ -32,6 +33,8 @@ def separate(
         "--mp3",
         "--mp3-bitrate",
         str(bitrate),
+        "-j",
+        str(JOBS),
         "-o",
         str(output_dir),
         str(input_path),
